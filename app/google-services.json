@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "921700280797",
+    "project_id": "vapeapp-7c057",
+    "storage_bucket": "vapeapp-7c057.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:921700280797:android:0855776df8eef6018cee34",
+        "android_client_info": {
+          "package_name": "com.mariomorenoarroyo.tfg"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "921700280797-9lrke02tubhai5timv3jitk3rpje3l0t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mariomorenoarroyo.tfg",
+            "certificate_hash": "ea742dfb4a1ba0af3370cabe2b87aa1bb997cb5b"
+          }
+        },
+        {
+          "client_id": "921700280797-fe9tr34dbmf526q5c2a7i4bsnb7s4eku.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_1BiLxomPyguqZz6J1KMNuT47zAAVKwM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "921700280797-fe9tr34dbmf526q5c2a7i4bsnb7s4eku.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

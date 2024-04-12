@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/iniciarSesionFragment">
+
+    <fragment
+        android:id="@+id/iniciarSesionFragment"
+        android:name="com.mariomorenoarroyo.tfg.view.fragment.IniciarSesionFragment"
+        android:label="fragment_iniciar_sesion"
+        tools:layout="@layout/fragment_iniciar_sesion" >
+        <action
+            android:id="@+id/action_iniciarSesionFragment_to_mainActivity"
+            app:destination="@id/mainActivity" />
+        <action
+            android:id="@+id/action_iniciarSesionFragment_to_registrarseFragment"
+            app:destination="@id/registrarseFragment" />
+        <action
+            android:id="@+id/action_iniciarSesionFragment_to_olvidarContrasenaFragment"
+            app:destination="@id/olvidarContrasenaFragment" />
+    </fragment>
+    <activity
+        android:id="@+id/mainActivity"
+        android:name="com.mariomorenoarroyo.tfg.view.activity.MainActivity"
+        android:label="activity_main"
+        tools:layout="@layout/activity_main" />
+    <fragment
+        android:id="@+id/registrarseFragment"
+        android:name="com.mariomorenoarroyo.tfg.view.fragment.RegistrarseFragment"
+        android:label="fragment_registrarse"
+        tools:layout="@layout/fragment_registrarse" >
+        <action
+            android:id="@+id/action_registrarseFragment_to_iniciarSesionFragment"
+            app:destination="@id/iniciarSesionFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/olvidarContrasenaFragment"
+        android:name="com.mariomorenoarroyo.tfg.view.fragment.OlvidarContrasenaFragment"
+        android:label="fragment_olvidar_contrasena"
+        tools:layout="@layout/fragment_olvidar_contrasena" />
+</navigation>
