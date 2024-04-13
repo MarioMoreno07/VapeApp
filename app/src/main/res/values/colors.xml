@@ -4,4 +4,10 @@
     <color name="white">#FFFFFFFF</color>
     <color name ="red">#FF0000</color>
     <color name = "rojo">#A80000</color>
+
+
+    <color name="colorButton">#041F36</color>
+    <color name="colorTextTittle">#009AE8</color>
+    <color name="colorText">#00A7B9</color>
+    <color name="colorButonText">#00774B</color>
 </resources>

@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/menu_inicio"
+        android:icon="@drawable/shop"
+        android:title="Inicio"
+        app:itemIconSize="32dp"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/menu_tienda"
         android:icon="@drawable/shop"

@@ -114,6 +114,7 @@ class RegistrarseFragment : Fragment() {
     }
 
 
+    //Comprobacion de si es mayor de edad
     @RequiresApi(Build.VERSION_CODES.O)
     fun esMayorDe18(fechaNacimiento: String): Boolean {
 
