@@ -6,8 +6,8 @@
     <color name = "rojo">#A80000</color>
 
 
-    <color name="colorButton">#041F36</color>
-    <color name="colorTextTittle">#009AE8</color>
-    <color name="colorText">#00A7B9</color>
-    <color name="colorButonText">#00774B</color>
+    <color name="colorButton">#190482</color>
+    <color name="colorTextTittle">#7752FE</color>
+    <color name="colorText">#8E8FFA</color>
+    <color name="colorButonText">#C2D9FF</color>
 </resources>

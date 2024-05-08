@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "921700280797",
+    "firebase_url": "https://vapeapp-7c057-default-rtdb.firebaseio.com",
     "project_id": "vapeapp-7c057",
     "storage_bucket": "vapeapp-7c057.appspot.com"
   },
@@ -19,6 +20,14 @@
           "android_info": {
             "package_name": "com.mariomorenoarroyo.tfg",
             "certificate_hash": "ea742dfb4a1ba0af3370cabe2b87aa1bb997cb5b"
+          }
+        },
+        {
+          "client_id": "921700280797-pugqoj4bh93oc94mdr0a40ng98t4f09f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mariomorenoarroyo.tfg",
+            "certificate_hash": "1342a2324aa59727f881229ee62f565b05254d63"
           }
         },
         {

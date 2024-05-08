@@ -39,4 +39,33 @@
         android:name="com.mariomorenoarroyo.tfg.view.fragment.OlvidarContrasenaFragment"
         android:label="fragment_olvidar_contrasena"
         tools:layout="@layout/fragment_olvidar_contrasena" />
+    <fragment
+        android:id="@+id/saboresFragment"
+        android:name="com.mariomorenoarroyo.tfg.view.fragment.SaboresFragment"
+        android:label="fragment_sabores"
+        tools:layout="@layout/fragment_sabores" >
+        <action
+            android:id="@+id/action_saboresFragment_to_saborDetailFragment"
+            app:destination="@id/saborDetailFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/saborDetailFragment"
+        android:name="com.mariomorenoarroyo.tfg.view.fragment.SaborDetailFragment"
+        android:label="fragment_sabor_detail"
+        tools:layout="@layout/fragment_sabor_detail" />
+    <fragment
+        android:id="@+id/vapeFragment"
+        android:name="com.mariomorenoarroyo.tfg.view.fragment.VapeFragment"
+        android:label="fragment_vape"
+        tools:layout="@layout/fragment_vape" >
+
+        <action
+            android:id="@+id/action_vapeFragment_to_vapeDetailFragment3"
+            app:destination="@id/vapeDetailFragment3" />
+    </fragment>
+    <fragment
+        android:id="@+id/vapeDetailFragment3"
+        android:name="com.mariomorenoarroyo.tfg.view.fragment.VapeDetailFragment"
+        android:label="fragment_vape_detail"
+        tools:layout="@layout/fragment_vape_detail" />
 </navigation>

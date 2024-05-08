@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/menu_inicio"
-        android:icon="@drawable/shop"
+        android:icon="@drawable/inicio"
         android:title="Inicio"
         app:itemIconSize="32dp"
         app:showAsAction="ifRoom" />
