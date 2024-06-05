@@ -21,11 +21,11 @@
         app:itemIconSize="32dp"
         app:showAsAction="ifRoom" />
 
-
     <item
         android:id="@+id/menu_vape"
         android:icon="@drawable/vape"
         android:title="Vapes y cachimbas"
         app:itemIconSize="32dp"
         app:showAsAction="ifRoom" />
+
 </menu>

@@ -9,6 +9,4 @@ data class Mensaje(
     val contenido: String = "",
     val id: String = "",
     val duracion: String=""
-): Parcelable, Serializable {
-    constructor():this("")
-}
+): Parcelable, Serializable

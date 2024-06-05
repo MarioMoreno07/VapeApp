@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.RatingBar
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -15,15 +16,13 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.mariomorenoarroyo.tfg.R
 import com.mariomorenoarroyo.tfg.data.adapter.MensajeAdapter
 import com.mariomorenoarroyo.tfg.data.model.Mensaje
 import com.mariomorenoarroyo.tfg.data.model.Sabor
-import com.mariomorenoarroyo.tfg.data.model.Vape
 import com.mariomorenoarroyo.tfg.databinding.FragmentSaborDetailBinding
-import com.mariomorenoarroyo.tfg.databinding.FragmentSaboresBinding
+import com.mariomorenoarroyo.tfg.view.activity.MainActivity
 
 class SaborDetailFragment : Fragment() {
     private lateinit var binding: FragmentSaborDetailBinding
@@ -31,33 +30,34 @@ class SaborDetailFragment : Fragment() {
     private lateinit var mensajeAdapter: MensajeAdapter
     private lateinit var auth: FirebaseAuth
     private lateinit var databaseReference: DatabaseReference
-
+    private lateinit var operativeActivity: MainActivity
 
     companion object {
         private const val ARG_SABOR = "sabor"
-        fun newInstance(sabor : Sabor): SaborDetailFragment {
+        fun newInstance(sabor: Sabor): SaborDetailFragment {
             val fragment = SaborDetailFragment()
             val args = Bundle()
-            args.putSerializable(ARG_SABOR,sabor)
+            args.putSerializable(ARG_SABOR, sabor)
             fragment.arguments = args
             return fragment
-
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             sabor = it.getSerializable(ARG_SABOR) as Sabor
+            operativeActivity = activity as MainActivity
         }
         auth = Firebase.auth
-        databaseReference = FirebaseDatabase.getInstance().getReference("sabores/${sabor.nombreSabor}/comentarios")
+        databaseReference = FirebaseDatabase.getInstance().getReference("sabores/comentarios/${sabor.nombreSabor}")
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        binding= FragmentSaborDetailBinding.inflate(inflater, container, false)
+        binding = FragmentSaborDetailBinding.inflate(inflater, container, false)
         setupSendButton()
         setupRecyclerView()
         loadMessages()
@@ -65,14 +65,69 @@ class SaborDetailFragment : Fragment() {
         val sabor = arguments?.getSerializable(ARG_SABOR) as? Sabor
         if (sabor != null) {
             mostarDetallesSabor(sabor)
-        } else{
+        } else {
             Toast.makeText(context, "No se ha podido cargar el sabor", Toast.LENGTH_SHORT).show()
         }
 
+        binding.back.setOnClickListener {
+            requireActivity().onBackPressed()
+        }
+
+        binding.recyclerViewComments.visibility = View.GONE
+        binding.textViewCommentsTitle.setOnClickListener {
+            if (binding.recyclerViewComments.visibility == View.VISIBLE) {
+                binding.recyclerViewComments.visibility = View.GONE
+            } else {
+                binding.recyclerViewComments.visibility = View.VISIBLE
+            }
+        }
+
+        binding.favorito.setOnClickListener {
+            addSaborFavorito(sabor)
+        }
+
+        binding.ratingBarSabor.setOnRatingBarChangeListener { _, rating, _ ->
+            guardarRating(rating)
+        }
 
         return binding.root
     }
 
+    private fun addSaborFavorito(sabor: Sabor?) {
+        val user = auth.currentUser
+        if (user != null && sabor != null) {
+            val userEmail = user.email
+            val email = userEmail?.replace(".", ",")
+
+            val database = FirebaseDatabase.getInstance().reference
+            val favoritesRef = database.child("users").child(email!!).child("Saboresfavoritos")
+
+            // Comprobar si el vape ya está en la lista de favoritos del usuario
+            favoritesRef.orderByChild("nombreSabor").equalTo(sabor.nombreSabor).addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        // El vape ya está en la lista de favoritos
+                        Toast.makeText(context, "El sabor ya está en la lista de favoritos", Toast.LENGTH_SHORT).show()
+                    } else {
+                        // El vape no está en la lista de favoritos, añadirlo
+                        favoritesRef.push().setValue(sabor)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    Toast.makeText(context, "Sabor añadido a favoritos", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Error al añadir ${sabor.nombreSabor} a favoritos", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                    }
+                }
+                override fun onCancelled(databaseError: DatabaseError) {
+                    Toast.makeText(context, "Error al verificar si el vape está en la lista de favoritos", Toast.LENGTH_SHORT).show()
+                }
+            })
+        } else {
+            Toast.makeText(context, "No hay usuario autenticado o vape es nulo", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     private fun setupSendButton() {
         binding.buttonSendComment.setOnClickListener {
@@ -81,15 +136,14 @@ class SaborDetailFragment : Fragment() {
                 // Obtener el ID del usuario actual
                 val userID = auth.currentUser?.uid
 
-                // Crear un nuevo mensaje
                 val mensajeID = databaseReference.push().key
                 val nuevoMensaje = userID?.let { it1 -> Mensaje(mensajeText) }
 
-                // Guardar el mensaje en la base de datos
                 mensajeID?.let {
                     databaseReference.child(it).setValue(nuevoMensaje)
                         .addOnSuccessListener {
-                            Toast.makeText(context, "Mensaje enviado", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Mensaje enviado. Haz click en 'comentarios' para ver los comentarios " +
+                                    "de otras personas", Toast.LENGTH_LONG).show()
                             // Limpiar el campo de texto después de enviar el mensaje
                             binding.editTextComment.text.clear()
                         }
@@ -103,14 +157,14 @@ class SaborDetailFragment : Fragment() {
         }
     }
 
-
     private fun setupRecyclerView() {
-        mensajeAdapter = MensajeAdapter(emptyList()) // Inicializamos el adaptador con una lista vacía
+        mensajeAdapter = MensajeAdapter(emptyList())
         binding.recyclerViewComments.apply {
             adapter = mensajeAdapter
             layoutManager = LinearLayoutManager(context)
         }
     }
+
     private fun loadMessages() {
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
@@ -132,20 +186,20 @@ class SaborDetailFragment : Fragment() {
     }
 
     private fun mostarDetallesSabor(sabor: Sabor) {
-        binding.nombreDelSabor.text=""
-        binding.descripcionDelSabor.text=""
+        binding.nombreDelSabor.text = ""
+        binding.descripcionDelSabor.text = ""
 
         obtenerSaboresDeFirestore(sabor)
     }
 
-    private fun obtenerSaboresDeFirestore(sabor:Sabor) {
+    private fun obtenerSaboresDeFirestore(sabor: Sabor) {
         val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("sabores")
 
         databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(datasnapshot: DataSnapshot) {
-                for(snapshot in datasnapshot.children){
+                for (snapshot in datasnapshot.children) {
                     val saborEnFirestore = snapshot.getValue(Sabor::class.java)
-                    if (saborEnFirestore != null && saborEnFirestore == sabor ) {
+                    if (saborEnFirestore != null && saborEnFirestore == sabor) {
                         binding.nombreDelSabor.text = saborEnFirestore.nombreSabor
                         binding.descripcionDelSabor.text = saborEnFirestore.descripcionSabor
                         Glide.with(requireContext())
@@ -161,7 +215,26 @@ class SaborDetailFragment : Fragment() {
                 Toast.makeText(context, "Error al obtener el sabor", Toast.LENGTH_SHORT).show()
             }
         })
-
     }
 
+    private fun guardarRating(rating: Float) {
+        val user = auth.currentUser
+        if (user != null) {
+            val userEmail = user.email
+            val email = userEmail?.replace(".", ",")
+
+            val database = FirebaseDatabase.getInstance().reference
+            val ratingRef = database.child("ratings").child("sabores").child(email!!).child(sabor.nombreSabor)
+
+            ratingRef.setValue(rating).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(context, "Rating guardado: $rating estrellas", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Error al guardar el rating", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            Toast.makeText(context, "Usuario no autenticado", Toast.LENGTH_SHORT).show()
+        }
+    }
 }

@@ -39,7 +39,6 @@ class OlvidarContrasenaFragment : Fragment() {
 
                 restablecerContrasena(correoElectronico)
             } else {
-                // Muestra un mensaje o realiza alguna acción cuando el correo electrónico esté vacío
                 Toast.makeText(context, "Por favor, introduce un correo electrónico", Toast.LENGTH_SHORT).show()
             }
         }
@@ -55,10 +54,8 @@ class OlvidarContrasenaFragment : Fragment() {
         FirebaseAuth.getInstance().sendPasswordResetEmail(correoElectronico)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Éxito al enviar la solicitud, manejar según tus necesidades
                     Toast.makeText(context, "Se ha enviado un correo para restablecer la contraseña", Toast.LENGTH_SHORT).show()
                 } else {
-                    // Error al enviar la solicitud, manejar según tus necesidades
                     Toast.makeText(context, "Error al enviar la solicitud", Toast.LENGTH_SHORT).show()
                 }
             }

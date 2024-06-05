@@ -68,4 +68,27 @@
         android:name="com.mariomorenoarroyo.tfg.view.fragment.VapeDetailFragment"
         android:label="fragment_vape_detail"
         tools:layout="@layout/fragment_vape_detail" />
+    <fragment
+        android:id="@+id/perfilFragment"
+        android:name="com.mariomorenoarroyo.tfg.view.fragment.PerfilFragment"
+        android:label="fragment_perfil"
+        tools:layout="@layout/fragment_perfil" >
+        <action
+            android:id="@+id/action_perfilFragment_to_iniciarSesionFragment"
+            app:destination="@id/iniciarSesionFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/inicioFragment"
+        android:name="com.mariomorenoarroyo.tfg.view.fragment.InicioFragment"
+        android:label="fragment_inicio"
+        tools:layout="@layout/fragment_inicio" >
+        <action
+            android:id="@+id/action_inicioFragment_to_addNoticiaFragment"
+            app:destination="@id/addNoticiaFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/addNoticiaFragment"
+        android:name="com.mariomorenoarroyo.tfg.view.fragment.AddNoticiaFragment"
+        android:label="fragment_add_noticia"
+        tools:layout="@layout/fragment_add_noticia" />
 </navigation>

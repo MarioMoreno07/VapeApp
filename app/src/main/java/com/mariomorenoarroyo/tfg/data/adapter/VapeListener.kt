@@ -12,21 +12,21 @@ interface VapeListener {
             {
                 "vapes": [
                     {
-                        "nombreVape": "Vape Supreme",
+                        "nombreVape": "Vaper Supreme",
                         "descripcionVape": "La mejor calidad en vapes, perfecto para los amantes de los vapes y quieren lo mejor",
                         "imagen":"https://www.vitalcigar.es/img/productos/istick-pico-2-75w-gzeno-s-tank-2ml-eleaf.jpg",
                         "precioVape": 10.99
                         
                     },
                     {
-                        "nombreVape": "Vape Pro 4000",
+                        "nombreVape": "Vaper Pro 4000",
                         "descripcionVape": "Un vape de alta calidad pefecto para los amantes de los vapes",
                         "imagen":"https://upload.vapeo24.com/producto/md/uwell-koko-gk2-586660.webp",
                         "precioVape": 12.99
                        
                     },
                     {
-                        "nombreVape": "Vape Puf",
+                        "nombreVape": "Vaper Puf",
                         "descripcionVape": "Vaper para los principiantes, perfecto para empezar a vapear",
                         "imagen":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS558ocS0MkmFmc0oerIvLcXfrKpCLYUxa6LdrtyPo-KQ&s",
                         "precioVape": 14.99

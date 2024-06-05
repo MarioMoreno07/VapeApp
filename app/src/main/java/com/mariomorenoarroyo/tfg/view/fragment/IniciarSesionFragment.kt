@@ -1,6 +1,5 @@
 package com.mariomorenoarroyo.tfg.view.fragment
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -21,18 +20,13 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.mariomorenoarroyo.tfg.R
 import com.mariomorenoarroyo.tfg.databinding.FragmentIniciarSesionBinding
 import com.mariomorenoarroyo.tfg.view.activity.MainActivity
-
 import com.mariomorenoarroyo.tfg.view.activity.ProviderType
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Date
 
 
 class IniciarSesionFragment : Fragment() {
 
     private val GOOGLE_SIGN_IN = 100
     private lateinit var binding: FragmentIniciarSesionBinding
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,23 +50,18 @@ class IniciarSesionFragment : Fragment() {
         val btnGoogle: Button = view.findViewById(R.id.google)
         val olvContrasena: TextView = view.findViewById(R.id.olvContraseña)
 
-
-
         session()
-
-
 
         btnIniciarSesion.setOnClickListener {
             iniciarUsuario()
         }
 
+       
         btnGoogle.setOnClickListener {
-
            iniciarSesionGoogle()
         }
 
         btnRegistrarse.setOnClickListener {
-            // Navegar al RegistrarseFragment al seleccionar Registrarse
             findNavController().navigate(R.id.action_iniciarSesionFragment_to_registrarseFragment)
         }
 
@@ -96,7 +85,6 @@ class IniciarSesionFragment : Fragment() {
 
 
     private fun session() {
-        // Obtener SharedPreferences del contexto de la aplicación
         val prefs = requireActivity().getPreferences(Context.MODE_PRIVATE)
 
         val email = prefs.getString("email", null)
@@ -114,15 +102,12 @@ class IniciarSesionFragment : Fragment() {
                 binding.contrasena.text.toString()
             ).addOnCompleteListener {
                 if (it.isSuccessful) {
-                    // Si la operación es exitosa, muestra la pantalla principal
                     showHome(it.result?.user?.email ?: "", ProviderType.BASIC)
                 } else {
-                    // Si hay un error, muestra un mensaje de error al usuario
                     Toast.makeText(context, "Error al iniciar sesión", Toast.LENGTH_SHORT).show()
                 }
             }
         } else {
-            // Si los campos están vacíos, muestra un mensaje indicando que deben completarse
             Toast.makeText(context, "Por favor, rellene todos los campos", Toast.LENGTH_SHORT)
                 .show()
         }

@@ -44,7 +44,6 @@ class CachimbaDetailFragment : Fragment() {
         }
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -52,7 +51,7 @@ class CachimbaDetailFragment : Fragment() {
         }
         auth = Firebase.auth
 
-        databaseReference = FirebaseDatabase.getInstance().getReference("cachimbas/${cachimba.nombreCachimba}/comentarios")
+        databaseReference = FirebaseDatabase.getInstance().getReference("cachimbas/comentarios/${cachimba.nombreCachimba}")
     }
 
     override fun onCreateView(
@@ -71,18 +70,62 @@ class CachimbaDetailFragment : Fragment() {
             Toast.makeText(context, "No se ha podido cargar la cachimba", Toast.LENGTH_SHORT).show()
         }
 
+        binding.back.setOnClickListener {
+            requireActivity().onBackPressed()
+        }
+
+        binding.favorito.setOnClickListener {
+            addCachimbatoFavorito(cachimba)
+        }
+
+        binding.ratingBarVape.setOnRatingBarChangeListener { _, rating, _ ->
+            guardarRating(rating)
+        }
 
         return binding.root
+    }
+
+    private fun addCachimbatoFavorito(cachimba: Cachimba?) {
+        val user = auth.currentUser
+        if (user != null && cachimba != null) {
+            val userEmail = user.email
+            val email = userEmail?.replace(".", ",")
+
+            val database = FirebaseDatabase.getInstance().reference
+            val favoritesRef = database.child("users").child(email!!).child("cachimbasfavoritos")
+
+            // Comprobar si el vape ya está en la lista de favoritos del usuario
+            favoritesRef.orderByChild("nombreCachimba").equalTo(cachimba.nombreCachimba).addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        // El vape ya está en la lista de favoritos
+                        Toast.makeText(context, "La cachimba ya está en la lista de favoritos", Toast.LENGTH_SHORT).show()
+                    } else {
+                        // El vape no está en la lista de favoritos, añadirlo
+                        favoritesRef.push().setValue(cachimba)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    Toast.makeText(context, "Cachimba añadido a favoritos", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Error al añadir ${cachimba.nombreCachimba} a favoritos", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                    }
+                }
+                override fun onCancelled(databaseError: DatabaseError) {
+                    Toast.makeText(context, "Error al verificar si el vape está en la lista de favoritos", Toast.LENGTH_SHORT).show()
+                }
+            })
+        } else {
+            Toast.makeText(context, "No hay usuario autenticado o vape es nulo", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun setupSendButton() {
         binding.buttonSendComment.setOnClickListener {
             val mensajeText = binding.editTextComment.text.toString().trim()
             if (mensajeText.isNotEmpty()) {
-                // Obtener el ID del usuario actual
                 val userID = auth.currentUser?.uid
-
-                // Crear un nuevo mensaje
                 val mensajeID = databaseReference.push().key
                 val nuevoMensaje = userID?.let { it1 -> Mensaje(mensajeText) }
 
@@ -90,8 +133,9 @@ class CachimbaDetailFragment : Fragment() {
                 mensajeID?.let {
                     databaseReference.child(it).setValue(nuevoMensaje)
                         .addOnSuccessListener {
-                            Toast.makeText(context, "Mensaje enviado", Toast.LENGTH_SHORT).show()
-                            // Limpiar el campo de texto después de enviar el mensaje
+                            Toast.makeText(context, "Mensaje enviado. Haz click en 'comentarios' para ver los comentarios " +
+                                    "de otras personas", Toast.LENGTH_LONG).show()
+                            //Limpia el campo de texto
                             binding.editTextComment.text.clear()
                         }
                         .addOnFailureListener {
@@ -168,5 +212,27 @@ class CachimbaDetailFragment : Fragment() {
                 Toast.makeText(context, "Error al obtener los detalles del vape", Toast.LENGTH_SHORT).show()
             }
         })
+    }
+
+    private fun guardarRating(rating: Float) {
+        val user = auth.currentUser
+        if (user != null) {
+            val userEmail = user.email
+            val email = userEmail?.replace(".", ",")
+
+            val database = FirebaseDatabase.getInstance().reference
+            val ratingRef = database.child("ratings").child("cachimbas").child(email!!)
+                .child(cachimba.nombreCachimba)
+
+            ratingRef.setValue(rating).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(context, "Rating guardado: $rating estrellas", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Error al guardar el rating", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            Toast.makeText(context, "Usuario no autenticado", Toast.LENGTH_SHORT).show()
+        }
     }
 }

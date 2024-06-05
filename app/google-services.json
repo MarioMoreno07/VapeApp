@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "921700280797-3v5cmvapsjqg8hp2kqv5rd513sb04vad.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mariomorenoarroyo.tfg",
+            "certificate_hash": "ac5c536b704752065de05f36d6fe326523405943"
+          }
+        },
+        {
           "client_id": "921700280797-9lrke02tubhai5timv3jitk3rpje3l0t.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
