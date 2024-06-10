@@ -1,0 +1,27 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="Ajustes Generales">
+        <SwitchPreferenceCompat
+            android:key="dark_mode"
+            android:title="Modo oscuro"
+            android:summary="Activar o desactivar modo oscuro"
+            android:defaultValue="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Notificaciones">
+        <SwitchPreferenceCompat
+            android:key="notifications"
+            android:title="Activar notificaciones"
+            android:summary="Activar o desactivar notificaciones"
+            android:defaultValue="false" />
+
+        <!-- Agregar el botón de notificación -->
+        <Preference
+            android:key="notification_button"
+            android:title="Enviar notificación"
+            android:summary="Enviar una notificación de prueba"
+            android:visibility="gone" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

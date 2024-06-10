@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.RatingBar
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -82,10 +83,12 @@ class SaborDetailFragment : Fragment() {
             }
         }
 
-        binding.favorito.setOnClickListener {
-            addSaborFavorito(sabor)
+        val favoritoButton = binding.favorito
+        checkIfSaborIsFavorito(sabor, favoritoButton)
+        favoritoButton.setOnClickListener {
+            favoritoButton.isSelected = !favoritoButton.isSelected
+            addSaborFavorito(sabor, favoritoButton.isSelected)
         }
-
         binding.ratingBarSabor.setOnRatingBarChangeListener { _, rating, _ ->
             guardarRating(rating)
         }
@@ -93,7 +96,7 @@ class SaborDetailFragment : Fragment() {
         return binding.root
     }
 
-    private fun addSaborFavorito(sabor: Sabor?) {
+    private fun checkIfSaborIsFavorito(sabor: Sabor?, favoritoButton: ImageButton) {
         val user = auth.currentUser
         if (user != null && sabor != null) {
             val userEmail = user.email
@@ -102,30 +105,60 @@ class SaborDetailFragment : Fragment() {
             val database = FirebaseDatabase.getInstance().reference
             val favoritesRef = database.child("users").child(email!!).child("Saboresfavoritos")
 
-            // Comprobar si el vape ya está en la lista de favoritos del usuario
             favoritesRef.orderByChild("nombreSabor").equalTo(sabor.nombreSabor).addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        // El vape ya está en la lista de favoritos
-                        Toast.makeText(context, "El sabor ya está en la lista de favoritos", Toast.LENGTH_SHORT).show()
-                    } else {
-                        // El vape no está en la lista de favoritos, añadirlo
-                        favoritesRef.push().setValue(sabor)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    Toast.makeText(context, "Sabor añadido a favoritos", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "Error al añadir ${sabor.nombreSabor} a favoritos", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                    }
+                    favoritoButton.isSelected = dataSnapshot.exists()
                 }
+
                 override fun onCancelled(databaseError: DatabaseError) {
-                    Toast.makeText(context, "Error al verificar si el vape está en la lista de favoritos", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Error al verificar si el sabor está en la lista de favoritos", Toast.LENGTH_SHORT).show()
                 }
             })
+        }
+    }
+
+    private fun addSaborFavorito(sabor: Sabor?, isFavorito: Boolean) {
+        val user = auth.currentUser
+        if (user != null && sabor != null) {
+            val userEmail = user.email
+            val email = userEmail?.replace(".", ",")
+
+            val database = FirebaseDatabase.getInstance().reference
+            val favoritesRef = database.child("users").child(email!!).child("Saboresfavoritos")
+
+            if (isFavorito) {
+                // Añadir el sabor a favoritos
+                favoritesRef.push().setValue(sabor)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Toast.makeText(context, "Sabor añadido a favoritos", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Error al añadir ${sabor.nombreSabor} a favoritos", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            } else {
+                // Eliminar el sabor de favoritos
+                favoritesRef.orderByChild("nombreSabor").equalTo(sabor.nombreSabor).addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                        for (snapshot in dataSnapshot.children) {
+                            snapshot.ref.removeValue()
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        Toast.makeText(context, "Sabor eliminado de favoritos", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Error al eliminar ${sabor.nombreSabor} de favoritos", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                        }
+                    }
+
+                    override fun onCancelled(databaseError: DatabaseError) {
+                        Toast.makeText(context, "Error al eliminar ${sabor.nombreSabor} de favoritos", Toast.LENGTH_SHORT).show()
+                    }
+                })
+            }
         } else {
-            Toast.makeText(context, "No hay usuario autenticado o vape es nulo", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "No hay usuario autenticado o el sabor es nulo", Toast.LENGTH_SHORT).show()
         }
     }
 

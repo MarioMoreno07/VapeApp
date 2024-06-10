@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -14,7 +15,6 @@ import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
 import com.mariomorenoarroyo.tfg.data.adapter.MensajeAdapter
 import com.mariomorenoarroyo.tfg.data.model.Mensaje
-import com.mariomorenoarroyo.tfg.data.model.User
 import com.mariomorenoarroyo.tfg.data.model.Vape
 import com.mariomorenoarroyo.tfg.databinding.FragmentVapeDetailBinding
 
@@ -42,7 +42,6 @@ class VapeDetailFragment : Fragment() {
             vape = it.getSerializable(ARG_Vape) as Vape
         }
         auth = Firebase.auth
-
         databaseReference = FirebaseDatabase.getInstance().getReference("vapes/comentarios/${vape.nombreVape}")
     }
 
@@ -66,9 +65,13 @@ class VapeDetailFragment : Fragment() {
             requireActivity().onBackPressed()
         }
 
-        binding.favorito.setOnClickListener {
-            addVapeToFavorites(vape)
+        val favoritoButton = binding.favorito as ImageButton
+        checkIfVapeIsFavorito(vape, favoritoButton)
+        favoritoButton.setOnClickListener {
+            favoritoButton.isSelected = !favoritoButton.isSelected
+            addVapeFavorito(vape, favoritoButton.isSelected)
         }
+
         binding.recyclerViewComments.visibility = View.GONE
         binding.textViewCommentsTitle.setOnClickListener {
             if (binding.recyclerViewComments.visibility == View.VISIBLE) {
@@ -81,7 +84,74 @@ class VapeDetailFragment : Fragment() {
         binding.ratingBarVape.setOnRatingBarChangeListener { _, rating, _ ->
             guardarRating(rating)
         }
+
         return binding.root
+    }
+
+    private fun checkIfVapeIsFavorito(vape: Vape?, favoritoButton: ImageButton) {
+        val user = auth.currentUser
+        if (user != null && vape != null) {
+            val userEmail = user.email
+            val email = userEmail?.replace(".", ",")
+
+            val database = FirebaseDatabase.getInstance().reference
+            val favoritesRef = database.child("users").child(email!!).child("Vapesfavoritos")
+
+            favoritesRef.orderByChild("nombreVape").equalTo(vape.nombreVape).addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    favoritoButton.isSelected = dataSnapshot.exists()
+                }
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                    Toast.makeText(context, "Error al verificar si el vape está en la lista de favoritos", Toast.LENGTH_SHORT).show()
+                }
+            })
+        }
+    }
+
+    private fun addVapeFavorito(vape: Vape?, isFavorito: Boolean) {
+        val user = auth.currentUser
+        if (user != null && vape != null) {
+            val userEmail = user.email
+            val email = userEmail?.replace(".", ",")
+
+            val database = FirebaseDatabase.getInstance().reference
+            val favoritesRef = database.child("users").child(email!!).child("Vapesfavoritos")
+
+            if (isFavorito) {
+                // Añadir el vape a favoritos
+                favoritesRef.push().setValue(vape)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Toast.makeText(context, "Vape añadido a favoritos", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Error al añadir ${vape.nombreVape} a favoritos", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            } else {
+                // Eliminar el vape de favoritos
+                favoritesRef.orderByChild("nombreVape").equalTo(vape.nombreVape).addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                        for (snapshot in dataSnapshot.children) {
+                            snapshot.ref.removeValue()
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        Toast.makeText(context, "Vape eliminado de favoritos", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Error al eliminar ${vape.nombreVape} de favoritos", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                        }
+                    }
+
+                    override fun onCancelled(databaseError: DatabaseError) {
+                        Toast.makeText(context, "Error al eliminar ${vape.nombreVape} de favoritos", Toast.LENGTH_SHORT).show()
+                    }
+                })
+            }
+        } else {
+            Toast.makeText(context, "No hay usuario autenticado o el vape es nulo", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun setupSendButton() {
@@ -152,10 +222,8 @@ class VapeDetailFragment : Fragment() {
                 for (snapshot in dataSnapshot.children) {
                     val vapeEnFirebase = snapshot.getValue(Vape::class.java)
                     if (vapeEnFirebase != null && vapeEnFirebase == vape) {
-                        // Se encontró el vape correspondiente, mostrar los detalles
                         binding.nombreDelVape.text = vapeEnFirebase.nombreVape
                         binding.descripcionDelVape.text = vapeEnFirebase.descripcionVape
-                        // Cargar la imagen del vape
                         Glide.with(requireContext())
                             .load(vapeEnFirebase.imagenVape)
                             .centerCrop()
@@ -163,7 +231,6 @@ class VapeDetailFragment : Fragment() {
                         return
                     }
                 }
-                // No se encontró el vape correspondiente
                 Toast.makeText(context, "No se encontraron detalles para este vape", Toast.LENGTH_SHORT).show()
             }
 
@@ -171,42 +238,6 @@ class VapeDetailFragment : Fragment() {
                 Toast.makeText(context, "Error al obtener los detalles del vape", Toast.LENGTH_SHORT).show()
             }
         })
-    }
-
-    private fun addVapeToFavorites(vape: Vape?) {
-        val user = auth.currentUser
-        if (user != null && vape != null) {
-            val userEmail = user.email
-            val email = userEmail?.replace(".", ",")
-
-            val database = FirebaseDatabase.getInstance().reference
-            val favoritesRef = database.child("users").child(email!!).child("Vapesfavoritos")
-
-            // Comprobar si el vape ya está en la lista de favoritos del usuario
-            favoritesRef.orderByChild("nombreVape").equalTo(vape.nombreVape).addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        // El vape ya está en la lista de favoritos
-                        Toast.makeText(context, "El vape ya está en la lista de favoritos", Toast.LENGTH_SHORT).show()
-                    } else {
-                        // El vape no está en la lista de favoritos, añadirlo
-                        favoritesRef.push().setValue(vape)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    Toast.makeText(context, "Vape añadido a favoritos", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "Error al añadir ${vape.nombreVape} a favoritos", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                    }
-                }
-                override fun onCancelled(databaseError: DatabaseError) {
-                    Toast.makeText(context, "Error al verificar si el vape está en la lista de favoritos", Toast.LENGTH_SHORT).show()
-                }
-            })
-        } else {
-            Toast.makeText(context, "No hay usuario autenticado o vape es nulo", Toast.LENGTH_SHORT).show()
-        }
     }
 
     private fun guardarRating(rating: Float) {
@@ -229,5 +260,4 @@ class VapeDetailFragment : Fragment() {
             Toast.makeText(context, "Usuario no autenticado", Toast.LENGTH_SHORT).show()
         }
     }
-
 }

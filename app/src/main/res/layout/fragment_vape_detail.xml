@@ -42,16 +42,17 @@
             android:id="@+id/favorito"
             android:layout_width="56dp"
             android:layout_height="46dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="64dp"
-            android:layout_marginBottom="115dp"
+            android:layout_marginStart="14dp"
+            android:layout_marginTop="84dp"
+            android:layout_marginEnd="72dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:padding="8dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/favorito"
-            app:layout_constraintBottom_toTopOf="@+id/descripcionDelVape"
+            android:src="@drawable/ic_favorito_selector"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/ivVapeDetail" />
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/ivVapeDetail"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/nombreDelVape"
@@ -85,24 +86,26 @@
             android:layout_marginBottom="17dp"
             android:numStars="5"
             android:stepSize="0.5"
+            android:progressTint="@color/colorRateBar"
             app:layout_constraintBottom_toTopOf="@+id/textViewCommentsTitle"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/descripcionDelVape" />
 
-        <TextView
+        <Button
             android:id="@+id/textViewCommentsTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="56dp"
+            android:layout_width="168dp"
+            android:layout_height="61dp"
+            android:layout_marginTop="20dp"
             android:padding="8dp"
             android:text="Comentarios"
             android:textSize="18sp"
+            android:backgroundTint="@color/colorButton"
+            android:textColor="@color/colorButonText"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/descripcionDelVape" />
+            app:layout_constraintTop_toBottomOf="@+id/ratingBarVape" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewComments"

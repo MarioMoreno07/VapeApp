@@ -6,14 +6,11 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -24,7 +21,6 @@ import com.google.firebase.ktx.Firebase
 import com.mariomorenoarroyo.tfg.R
 import com.mariomorenoarroyo.tfg.data.adapter.MensajeAdapter
 import com.mariomorenoarroyo.tfg.data.model.Mensaje
-import com.mariomorenoarroyo.tfg.data.model.Sabor
 import com.mariomorenoarroyo.tfg.data.model.Tienda
 import com.mariomorenoarroyo.tfg.databinding.FragmentTiendaDetailsBinding
 
@@ -40,7 +36,7 @@ class TiendaDetailsFragment : Fragment() {
         fun newInstance(tienda : Tienda): TiendaDetailsFragment {
             val fragment = TiendaDetailsFragment()
             val args = Bundle()
-            args.putSerializable(ARG_TIENDA,tienda)
+            args.putSerializable(ARG_TIENDA, tienda)
             fragment.arguments = args
             return fragment
         }
@@ -48,26 +44,26 @@ class TiendaDetailsFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-       arguments?.let {
-            tienda= it.getSerializable(ARG_TIENDA) as Tienda
-       }
-        auth= Firebase.auth
-        databaseReference=FirebaseDatabase.getInstance().getReference("tiendas/comentarios/${tienda.nombreTienda}")
+        arguments?.let {
+            tienda = it.getSerializable(ARG_TIENDA) as Tienda
+        }
+        auth = Firebase.auth
+        databaseReference = FirebaseDatabase.getInstance().getReference("tiendas/comentarios/${tienda.nombreTienda}")
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-       binding=FragmentTiendaDetailsBinding.inflate(inflater,container,false)
+        binding = FragmentTiendaDetailsBinding.inflate(inflater, container, false)
         setupSendButton()
         setupRecyclerView()
         loadMessages()
 
         val tienda = arguments?.getSerializable(ARG_TIENDA) as? Tienda
-        if(tienda!= null){
+        if (tienda != null) {
             mostrarDetalleTienda(tienda)
-        }else{
+        } else {
             Toast.makeText(context, "No se ha podido cargar la tienda", Toast.LENGTH_SHORT).show()
         }
 
@@ -84,8 +80,11 @@ class TiendaDetailsFragment : Fragment() {
             }
         }
 
-        binding.favorito.setOnClickListener {
-            addTiendaToFavorito(tienda)
+        val favoritoButton = binding.favorito as ImageButton
+        checkIfTiendaIsFavorito(tienda, favoritoButton)
+        favoritoButton.setOnClickListener {
+            favoritoButton.isSelected = !favoritoButton.isSelected
+            addTiendaToFavorito(tienda, favoritoButton.isSelected)
         }
 
         binding.fabAddInstagram.setOnClickListener {
@@ -93,13 +92,13 @@ class TiendaDetailsFragment : Fragment() {
         }
 
         binding.fabAddPhone.setOnClickListener {
-            Toast.makeText(context,"${tienda?.telefonoTienda}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "${tienda?.telefonoTienda}", Toast.LENGTH_SHORT).show()
         }
 
         return binding.root
     }
 
-    private fun addTiendaToFavorito(tienda: Tienda?) {
+    private fun checkIfTiendaIsFavorito(tienda: Tienda?, favoritoButton: ImageButton) {
         val user = auth.currentUser
         if (user != null && tienda != null) {
             val userEmail = user.email
@@ -108,39 +107,67 @@ class TiendaDetailsFragment : Fragment() {
             val database = FirebaseDatabase.getInstance().reference
             val favoritesRef = database.child("users").child(email!!).child("tiendasfavoritos")
 
-            // Comprobar si el vape ya está en la lista de favoritos del usuario
             favoritesRef.orderByChild("nombreTienda").equalTo(tienda.nombreTienda).addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        // El vape ya está en la lista de favoritos
-                        Toast.makeText(context, "La tienda ya está en la lista de favoritos", Toast.LENGTH_SHORT).show()
-                    } else {
-                        // El vape no está en la lista de favoritos, añadirlo
-                        favoritesRef.push().setValue(tienda)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    Toast.makeText(context, "Tienda añadido a favoritos", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "Error al añadir ${tienda.nombreTienda} a favoritos", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                    }
+                    favoritoButton.isSelected = dataSnapshot.exists()
                 }
+
                 override fun onCancelled(databaseError: DatabaseError) {
-                    Toast.makeText(context, "Error al verificar si el vape está en la lista de favoritos", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Error al verificar si la tienda está en la lista de favoritos", Toast.LENGTH_SHORT).show()
                 }
             })
-        } else {
-            Toast.makeText(context, "No hay usuario autenticado o vape es nulo", Toast.LENGTH_SHORT).show()
         }
     }
 
+    private fun addTiendaToFavorito(tienda: Tienda?, isFavorito: Boolean) {
+        val user = auth.currentUser
+        if (user != null && tienda != null) {
+            val userEmail = user.email
+            val email = userEmail?.replace(".", ",")
+
+            val database = FirebaseDatabase.getInstance().reference
+            val favoritesRef = database.child("users").child(email!!).child("tiendasfavoritos")
+
+            if (isFavorito) {
+                // Añadir la tienda a favoritos
+                favoritesRef.push().setValue(tienda)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Toast.makeText(context, "Tienda añadida a favoritos", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Error al añadir ${tienda.nombreTienda} a favoritos", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            } else {
+                // Eliminar la tienda de favoritos
+                favoritesRef.orderByChild("nombreTienda").equalTo(tienda.nombreTienda).addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                        for (snapshot in dataSnapshot.children) {
+                            snapshot.ref.removeValue()
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        Toast.makeText(context, "Tienda eliminada de favoritos", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Error al eliminar ${tienda.nombreTienda} de favoritos", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                        }
+                    }
+
+                    override fun onCancelled(databaseError: DatabaseError) {
+                        Toast.makeText(context, "Error al eliminar ${tienda.nombreTienda} de favoritos", Toast.LENGTH_SHORT).show()
+                    }
+                })
+            }
+        } else {
+            Toast.makeText(context, "No hay usuario autenticado o la tienda es nula", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     private fun setupSendButton() {
         binding.buttonSendComment.setOnClickListener {
             val mensajeText = binding.editTextComment.text.toString().trim()
             if (mensajeText.isNotEmpty()) {
-
                 val userID = auth.currentUser?.uid
 
                 val mensajeID = databaseReference.push().key
@@ -150,8 +177,7 @@ class TiendaDetailsFragment : Fragment() {
                 mensajeID?.let {
                     databaseReference.child(it).setValue(nuevoMensaje)
                         .addOnSuccessListener {
-                            Toast.makeText(context, "Mensaje enviado. Haz click en 'comentarios' para ver los comentarios " +
-                                    "de otras personas", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "Mensaje enviado. Haz click en 'comentarios' para ver los comentarios de otras personas", Toast.LENGTH_LONG).show()
                             binding.editTextComment.text.clear()
                         }
                         .addOnFailureListener {
@@ -193,8 +219,8 @@ class TiendaDetailsFragment : Fragment() {
     }
 
     private fun mostrarDetalleTienda(tienda: Tienda) {
-        binding.nombreDelTienda.text= ""
-        binding.horario.text= ""
+        binding.nombreDelTienda.text = ""
+        binding.horario.text = ""
 
         obtenerTiendasDeFirestore(tienda)
     }
@@ -203,9 +229,9 @@ class TiendaDetailsFragment : Fragment() {
         val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("tiendas")
         databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(datasnapshot: DataSnapshot) {
-                for(snapshot in datasnapshot.children){
+                for (snapshot in datasnapshot.children) {
                     val tiendaEnFirestore = snapshot.getValue(Tienda::class.java)
-                    if (tiendaEnFirestore != null && tiendaEnFirestore == tienda ) {
+                    if (tiendaEnFirestore != null && tiendaEnFirestore == tienda) {
                         binding.nombreDelTienda.text = tiendaEnFirestore.nombreTienda
                         binding.horario.text = tiendaEnFirestore.horarioTienda
                         Glide.with(requireContext())
@@ -216,10 +242,10 @@ class TiendaDetailsFragment : Fragment() {
                     }
                 }
             }
+
             override fun onCancelled(error: DatabaseError) {
                 Toast.makeText(context, "Error al obtener el sabor", Toast.LENGTH_SHORT).show()
             }
         })
-
     }
 }

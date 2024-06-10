@@ -10,4 +10,5 @@
     <color name="colorTextTittle">#7752FE</color>
     <color name="colorText">#8E8FFA</color>
     <color name="colorButonText">#C2D9FF</color>
+    <color name="colorRateBar">#E6D24E</color>
 </resources>

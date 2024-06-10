@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -24,7 +25,6 @@ import com.mariomorenoarroyo.tfg.data.model.Mensaje
 import com.mariomorenoarroyo.tfg.data.model.Vape
 import com.mariomorenoarroyo.tfg.databinding.FragmentVapeDetailBinding
 
-
 class CachimbaDetailFragment : Fragment() {
     private lateinit var binding: FragmentVapeDetailBinding
     private lateinit var cachimba: Cachimba
@@ -34,13 +34,12 @@ class CachimbaDetailFragment : Fragment() {
 
     companion object {
         private const val ARG_CACHIMBA = "cachimba"
-        fun newInstance(cachimba : Cachimba): CachimbaDetailFragment {
+        fun newInstance(cachimba: Cachimba): CachimbaDetailFragment {
             val fragment = CachimbaDetailFragment()
             val args = Bundle()
-            args.putSerializable(ARG_CACHIMBA,cachimba)
+            args.putSerializable(ARG_CACHIMBA, cachimba)
             fragment.arguments = args
             return fragment
-
         }
     }
 
@@ -50,7 +49,6 @@ class CachimbaDetailFragment : Fragment() {
             cachimba = it.getSerializable(ARG_CACHIMBA) as Cachimba
         }
         auth = Firebase.auth
-
         databaseReference = FirebaseDatabase.getInstance().getReference("cachimbas/comentarios/${cachimba.nombreCachimba}")
     }
 
@@ -58,7 +56,7 @@ class CachimbaDetailFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-       binding = FragmentVapeDetailBinding.inflate(inflater, container, false)
+        binding = FragmentVapeDetailBinding.inflate(inflater, container, false)
         setupSendButton()
         setupRecyclerView()
         loadMessages()
@@ -66,7 +64,7 @@ class CachimbaDetailFragment : Fragment() {
         val cachimba = arguments?.getSerializable(ARG_CACHIMBA) as? Cachimba
         if (cachimba != null) {
             mostarDetallesVape(cachimba)
-        } else{
+        } else {
             Toast.makeText(context, "No se ha podido cargar la cachimba", Toast.LENGTH_SHORT).show()
         }
 
@@ -74,8 +72,20 @@ class CachimbaDetailFragment : Fragment() {
             requireActivity().onBackPressed()
         }
 
-        binding.favorito.setOnClickListener {
-            addCachimbatoFavorito(cachimba)
+        val favoritoButton = binding.favorito as ImageButton
+        checkIfCachimbaIsFavorito(cachimba, favoritoButton)
+        favoritoButton.setOnClickListener {
+            favoritoButton.isSelected = !favoritoButton.isSelected
+            addCachimbaFavorito(cachimba, favoritoButton.isSelected)
+        }
+
+        binding.recyclerViewComments.visibility = View.GONE
+        binding.textViewCommentsTitle.setOnClickListener {
+            if (binding.recyclerViewComments.visibility == View.VISIBLE) {
+                binding.recyclerViewComments.visibility = View.GONE
+            } else {
+                binding.recyclerViewComments.visibility = View.VISIBLE
+            }
         }
 
         binding.ratingBarVape.setOnRatingBarChangeListener { _, rating, _ ->
@@ -85,7 +95,7 @@ class CachimbaDetailFragment : Fragment() {
         return binding.root
     }
 
-    private fun addCachimbatoFavorito(cachimba: Cachimba?) {
+    private fun checkIfCachimbaIsFavorito(cachimba: Cachimba?, favoritoButton: ImageButton) {
         val user = auth.currentUser
         if (user != null && cachimba != null) {
             val userEmail = user.email
@@ -94,30 +104,60 @@ class CachimbaDetailFragment : Fragment() {
             val database = FirebaseDatabase.getInstance().reference
             val favoritesRef = database.child("users").child(email!!).child("cachimbasfavoritos")
 
-            // Comprobar si el vape ya está en la lista de favoritos del usuario
             favoritesRef.orderByChild("nombreCachimba").equalTo(cachimba.nombreCachimba).addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        // El vape ya está en la lista de favoritos
-                        Toast.makeText(context, "La cachimba ya está en la lista de favoritos", Toast.LENGTH_SHORT).show()
-                    } else {
-                        // El vape no está en la lista de favoritos, añadirlo
-                        favoritesRef.push().setValue(cachimba)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    Toast.makeText(context, "Cachimba añadido a favoritos", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "Error al añadir ${cachimba.nombreCachimba} a favoritos", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                    }
+                    favoritoButton.isSelected = dataSnapshot.exists()
                 }
+
                 override fun onCancelled(databaseError: DatabaseError) {
-                    Toast.makeText(context, "Error al verificar si el vape está en la lista de favoritos", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Error al verificar si la cachimba está en la lista de favoritos", Toast.LENGTH_SHORT).show()
                 }
             })
+        }
+    }
+
+    private fun addCachimbaFavorito(cachimba: Cachimba?, isFavorito: Boolean) {
+        val user = auth.currentUser
+        if (user != null && cachimba != null) {
+            val userEmail = user.email
+            val email = userEmail?.replace(".", ",")
+
+            val database = FirebaseDatabase.getInstance().reference
+            val favoritesRef = database.child("users").child(email!!).child("cachimbasfavoritos")
+
+            if (isFavorito) {
+                // Añadir la cachimba a favoritos
+                favoritesRef.push().setValue(cachimba)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Toast.makeText(context, "Cachimba añadida a favoritos", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Error al añadir ${cachimba.nombreCachimba} a favoritos", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            } else {
+                // Eliminar la cachimba de favoritos
+                favoritesRef.orderByChild("nombreCachimba").equalTo(cachimba.nombreCachimba).addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                        for (snapshot in dataSnapshot.children) {
+                            snapshot.ref.removeValue()
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        Toast.makeText(context, "Cachimba eliminada de favoritos", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Error al eliminar ${cachimba.nombreCachimba} de favoritos", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                        }
+                    }
+
+                    override fun onCancelled(databaseError: DatabaseError) {
+                        Toast.makeText(context, "Error al eliminar ${cachimba.nombreCachimba} de favoritos", Toast.LENGTH_SHORT).show()
+                    }
+                })
+            }
         } else {
-            Toast.makeText(context, "No hay usuario autenticado o vape es nulo", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "No hay usuario autenticado o cachimba es nula", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -127,15 +167,13 @@ class CachimbaDetailFragment : Fragment() {
             if (mensajeText.isNotEmpty()) {
                 val userID = auth.currentUser?.uid
                 val mensajeID = databaseReference.push().key
-                val nuevoMensaje = userID?.let { it1 -> Mensaje(mensajeText) }
+                val nuevoMensaje = userID?.let { Mensaje(mensajeText) }
 
-                // Guardar el mensaje en la base de datos
                 mensajeID?.let {
                     databaseReference.child(it).setValue(nuevoMensaje)
                         .addOnSuccessListener {
                             Toast.makeText(context, "Mensaje enviado. Haz click en 'comentarios' para ver los comentarios " +
                                     "de otras personas", Toast.LENGTH_LONG).show()
-                            //Limpia el campo de texto
                             binding.editTextComment.text.clear()
                         }
                         .addOnFailureListener {
@@ -148,14 +186,14 @@ class CachimbaDetailFragment : Fragment() {
         }
     }
 
-
     private fun setupRecyclerView() {
-        mensajeAdapter = MensajeAdapter(emptyList()) // Inicializamos el adaptador con una lista vacía
+        mensajeAdapter = MensajeAdapter(emptyList())
         binding.recyclerViewComments.apply {
             adapter = mensajeAdapter
             layoutManager = LinearLayoutManager(context)
         }
     }
+
     private fun loadMessages() {
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
@@ -176,13 +214,11 @@ class CachimbaDetailFragment : Fragment() {
         })
     }
 
-
     private fun mostarDetallesVape(cachimba: Cachimba) {
         binding.nombreDelVape.text = ""
         binding.descripcionDelVape.text = ""
 
         obtenerVapeDeFirestore(cachimba)
-
     }
 
     private fun obtenerVapeDeFirestore(cachimba: Cachimba) {
@@ -193,10 +229,10 @@ class CachimbaDetailFragment : Fragment() {
                 for (snapshot in dataSnapshot.children) {
                     val vapeEnFirebase = snapshot.getValue(Cachimba::class.java)
                     if (vapeEnFirebase != null && vapeEnFirebase == cachimba) {
-                        // Se encontró el vape correspondiente, mostrar los detalles
+                        // Se encontró la cachimba correspondiente, mostrar los detalles
                         binding.nombreDelVape.text = vapeEnFirebase.nombreCachimba
                         binding.descripcionDelVape.text = vapeEnFirebase.descripcionCachimba
-                        // Cargar la imagen del vape
+                        // Cargar la imagen de la cachimba
                         Glide.with(requireContext())
                             .load(vapeEnFirebase.imagenCachimba)
                             .centerCrop()
@@ -204,12 +240,12 @@ class CachimbaDetailFragment : Fragment() {
                         return
                     }
                 }
-                // No se encontró el vape correspondiente
-                Toast.makeText(context, "No se encontraron detalles para este vape", Toast.LENGTH_SHORT).show()
+                // No se encontró la cachimba correspondiente
+                Toast.makeText(context, "No se encontraron detalles para esta cachimba", Toast.LENGTH_SHORT).show()
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
-                Toast.makeText(context, "Error al obtener los detalles del vape", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Error al obtener los detalles de la cachimba", Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -236,3 +272,4 @@ class CachimbaDetailFragment : Fragment() {
         }
     }
 }
+

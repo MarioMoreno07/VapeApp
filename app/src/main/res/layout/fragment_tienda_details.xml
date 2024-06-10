@@ -23,36 +23,37 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:src="@drawable/ic_launcher_background" />
 
+
         <ImageButton
             android:id="@+id/back"
             android:layout_width="56dp"
             android:layout_height="46dp"
-            android:layout_marginEnd="36dp"
-            android:layout_marginBottom="322dp"
+            android:layout_marginStart="53dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="25dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:padding="8dp"
             android:scaleType="centerCrop"
             android:src="@drawable/flecha"
-            app:layout_constraintBottom_toTopOf="@+id/textViewCommentsTitle"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
-
+            app:layout_constraintStart_toEndOf="@+id/ivTiendaDetail"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
             android:id="@+id/favorito"
             android:layout_width="56dp"
             android:layout_height="46dp"
             android:layout_marginStart="14dp"
+            android:layout_marginTop="84dp"
             android:layout_marginEnd="72dp"
-            android:layout_marginBottom="115dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:padding="8dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/favorito"
-            app:layout_constraintBottom_toTopOf="@+id/mapView"
+            android:src="@drawable/ic_favorito_selector"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/ivTiendaDetail" />
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/ivTiendaDetail"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/nombreDelTienda"
@@ -79,29 +80,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/ivTiendaDetail" />
 
-        <com.google.android.gms.maps.MapView
-            android:id="@+id/mapView"
-            android:layout_width="287dp"
-            android:layout_height="114dp"
-            android:layout_marginStart="50dp"
-            android:layout_marginTop="40dp"
-            android:layout_marginEnd="50dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/horario" />
-
-        <TextView
+        <Button
             android:id="@+id/textViewCommentsTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="168dp"
+            android:layout_height="61dp"
             android:layout_marginTop="20dp"
+            android:backgroundTint="@color/colorButton"
             android:padding="8dp"
             android:text="Comentarios"
+            android:textColor="@color/colorButonText"
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/mapView" />
+            app:layout_constraintTop_toBottomOf="@+id/horario" />
 
         <androidx.core.widget.NestedScrollView
             android:id="@+id/nestedScrollView"

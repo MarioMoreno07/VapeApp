@@ -27,6 +27,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import com.mariomorenoarroyo.tfg.R
 import com.mariomorenoarroyo.tfg.view.fragment.AjustesFragment
 import com.mariomorenoarroyo.tfg.view.fragment.FavoritoskFragment
@@ -161,10 +162,49 @@ class MainActivity : AppCompatActivity() {
         if (resultCode == Activity.RESULT_OK && requestCode == GALLERY_REQUEST_CODE) {
             data?.data?.let { uri ->
                 saveImageUriToDatabase(uri)
-                Glide.with(this).load(uri).into(profileImageView)
+                val currentUser = auth.currentUser
+                currentUser?.let { user ->
+                    val userId = user.uid
+                    val storageRef =
+                        FirebaseStorage.getInstance().reference.child("profile_images/$userId.jpg")
+                    storageRef.putFile(uri)
+                        .addOnSuccessListener { _ ->
+                            // Obtener la URL de descarga de la imagen
+                            storageRef.downloadUrl.addOnSuccessListener { imageUrl ->
+                                // Actualizar la referencia de la imagen en la base de datos
+                                val userRef = database.reference.child("users")
+                                userRef.child(userId).child("profileImageUri")
+                                    .setValue(imageUrl.toString())
+                                    .addOnSuccessListener {
+                                        // Cargar la imagen de perfil actualizada en el ImageView
+                                        Glide.with(this).load(uri).into(profileImageView)
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            "Imagen de perfil actualizada correctamente",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            "Error al actualizar la imagen de perfil: ${e.message}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Error al cargar la imagen: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                }
             }
         }
     }
+
 
     private fun saveImageUriToDatabase(imageUri: Uri) {
         val currentUser = auth.currentUser
@@ -178,12 +218,38 @@ class MainActivity : AppCompatActivity() {
                         for (userSnapshot in dataSnapshot.children) {
                             val userId = userSnapshot.key
                             userId?.let {
-                                userRef.child(userId).child("profileImageUri").setValue(imageUri.toString())
-                                    .addOnSuccessListener {
-                                        Toast.makeText(this@MainActivity, "Imagen de perfil actualizada correctamente", Toast.LENGTH_SHORT).show()
+                                // Subir la imagen al almacenamiento de Firebase
+                                val storageRef =
+                                    FirebaseStorage.getInstance().reference.child("profile_images/$userId.jpg")
+                                storageRef.putFile(imageUri)
+                                    .addOnSuccessListener { _ ->
+                                        // Obtener la URL de descarga de la imagen
+                                        storageRef.downloadUrl.addOnSuccessListener { imageUrl ->
+                                            // Actualizar la referencia de la imagen en la base de datos
+                                            userRef.child(userId).child("profileImageUri")
+                                                .setValue(imageUrl.toString())
+                                                .addOnSuccessListener {
+                                                    Toast.makeText(
+                                                        this@MainActivity,
+                                                        "Imagen de perfil actualizada correctamente",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                                .addOnFailureListener { e ->
+                                                    Toast.makeText(
+                                                        this@MainActivity,
+                                                        "Error al actualizar la imagen de perfil: ${e.message}",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                        }
                                     }
                                     .addOnFailureListener { e ->
-                                        Toast.makeText(this@MainActivity, "Error al actualizar la imagen de perfil: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            "Error al cargar la imagen: ${e.message}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
                             }
                         }
@@ -196,7 +262,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
     fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.nav_host_fragment_main, fragment)

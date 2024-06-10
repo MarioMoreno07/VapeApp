@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.FirebaseStorage
 import com.mariomorenoarroyo.tfg.data.model.Noticia
 import com.mariomorenoarroyo.tfg.databinding.FragmentAddNoticiaBinding
 import com.mariomorenoarroyo.tfg.view.activity.MainActivity
@@ -24,6 +25,7 @@ class AddNoticiaFragment : Fragment() {
     private lateinit var operativeActivity: MainActivity
     private val db = FirebaseDatabase.getInstance().reference
     private var imageUri: Uri? = null
+    val ajustesFragment = AjustesFragment()
 
     // Launcher for the gallery intent
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -79,17 +81,35 @@ class AddNoticiaFragment : Fragment() {
             return
         }
 
-        id?.let {
-            val noticia = Noticia(titulo, contenido, imageUri.toString(), userId, it)
+        id?.let { noticiaId ->
+            // Obtener una referencia al nodo en Firebase Storage donde se guardará la imagen
+            val storageRef = FirebaseStorage.getInstance().reference.child("noticias/$noticiaId.jpg")
 
-            db.child("noticias_globales").child(it).setValue(noticia)
-                .addOnSuccessListener {
-                    Toast.makeText(requireContext(), "Noticia añadida con éxito", Toast.LENGTH_SHORT).show()
-                    operativeActivity.replaceFragment(InicioFragment())
-                }
-                .addOnFailureListener { e ->
-                    Toast.makeText(requireContext(), "Error al añadir noticia: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+            // Subir la imagen a Firebase Storage
+            imageUri?.let { uri ->
+                storageRef.putFile(uri)
+                    .addOnSuccessListener { _ ->
+                        // Obtener la URL de descarga de la imagen
+                        storageRef.downloadUrl.addOnSuccessListener { imageUrl ->
+                            // Crear el objeto Noticia con la URL de descarga de la imagen
+                            val noticia = Noticia(titulo, contenido, imageUrl.toString(), userId, noticiaId)
+
+                            // Guardar la Noticia en la base de datos
+                            db.child("noticias_globales").child(noticiaId).setValue(noticia)
+                                .addOnSuccessListener {
+                                    ajustesFragment.createASimpleNotification(requireContext(),"Hay nuevas noticias", "Se ha una o más noticias nuevas")
+                                    operativeActivity.replaceFragment(InicioFragment())
+                                }
+                                .addOnFailureListener { e ->
+                                    Toast.makeText(requireContext(), "Error al añadir noticia: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(requireContext(), "Error al cargar la imagen: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
         }
     }
+
 }
