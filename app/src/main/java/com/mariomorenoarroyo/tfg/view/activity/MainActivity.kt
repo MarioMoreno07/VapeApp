@@ -130,14 +130,20 @@ class MainActivity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.nav_edit_profile -> {
                     replaceFragment(PerfilFragment())
+                    //Cerrar el drawer
+                    drawerLayout.closeDrawer(GravityCompat.START)
                     true
                 }
                 R.id.nav_settings -> {
                     replaceFragment(AjustesFragment())
+                    //Cerrar el drawer
+                    drawerLayout.closeDrawer(GravityCompat.START)
                     true
                 }
                 R.id.favoritos -> {
                     replaceFragment(FavoritoskFragment())
+                    //Cerrar el drawer
+                    drawerLayout.closeDrawer(GravityCompat.START)
                     true
                 }
                 R.id.log_out -> {
